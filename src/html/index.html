@@ -1,0 +1,110 @@
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Webchat com socketIO</title>
+
+    <style media="screen">
+        body {width: 500px; margin: 0 auto; margin-top: 2rem; }
+        .send {width: 100%; margin: 0; padding: 0; margin-top: 1rem; }
+        input.text {width: 80%; margin: 0; padding: 0; padding: 5px; }
+        .btn {padding: 5px 0; width: 82px; background-color: #eee; border: 0; margin: 0; border: solid #eee;        }
+        .btn:hover {background-color: #00e4bc}
+        ul {list-style-type: none;width: 100%;padding: 0;margin: 0;}
+        li { padding: 5px 10px; }
+        li:nth-child(odd) {background-color: #eee}
+    </style>
+
+
+<!--  Lista de mensagens -->
+<ul class="ul" id="messages"></ul>
+
+<!--  Input com o botão de Send-->
+<div class="send">
+        <input class="text" autofocus="" id="message" autocomplete="off" placeholder="Cloud esta em apuros!">
+        <button class="btn" id="sendMessage">Send</button>
+</div>
+
+<div>
+    <span id="visits">0</span>
+</div>
+
+
+<!--  Importar o client do socketIO-->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+    // Faz com que seja possível enviar mensagens com Enter
+    document.getElementById('message').addEventListener('keypress', function(e) {
+        var key = e.which || e.keyCode;
+        if (key == 13) {
+            sendMessage();
+        }
+    });
+
+    // Inicia o client socketIO
+    var socket = io();
+
+    // Abre um popup perguntando o nome da pessoa
+    var nome_usuario = prompt("Qual seu nome?");
+
+    // Lista com alguns nomes do Final Fantasy
+    var ff = [
+        "Cloud Strife",
+        "Sephiroth",
+        "Vincent Valentine",
+        "Zack Fair",
+        "Aerith Gainsborough",
+        "Tifa Lockhart",
+        "Barret Wallace",
+        "Yuffie Kisaragi",
+    ];
+
+    // Caso usuário não informe um nome será atribuido um nome aleatório da lista
+    if (nome_usuario === null || nome_usuario == "" || nome_usuario == " ") {
+        nome_usuario = ff[Math.floor(Math.random() * ff.length)];
+    }
+
+    // Quando um usuario entrar na tela envie para todos que entrou um novo usuario
+    socket.emit('chat message', "Bem vindo! " + nome_usuario);
+
+    // adiciona um addEventListener para o botão de submit
+    document.getElementById('sendMessage').addEventListener("click", sendMessage);
+
+    // cria a função que conecta no websocket e emite a mensagem
+    function sendMessage() {
+
+      // salva a mensagem como uma string
+      msg = document.getElementById('message').value;
+      if (msg.length > 0) {
+          console.log(msg);
+
+          // concatena o nome de usuário e a mensagem para enviar ao socketIo
+          socket.emit('chat message', nome_usuario + ": " + msg);
+
+          // reseta o valor do input da mensagem
+          document.getElementById('message').value = "";
+      }
+    }
+
+    // Sempre que receber uma mensagem ela é adicionada a lista
+    socket.on('chat message', function(msg){
+        // Busca o elemento UL
+        let ul = document.getElementById("messages");
+
+        // Cria um elemento LI
+        let li = document.createElement('li');
+
+        // Cria o elemento de quebra de linha
+        let br = document.createElement('br');
+        li.appendChild(document.createTextNode(msg));
+
+        // Adicionar o nome do usuário quebra a linha e adicionar a mensagem à lista de mensagems
+        ul.appendChild(li);
+    });
+
+    // Sempre que alguem entrar ou sair da tela atualiza numero de visitas
+    socket.on('visits', function(visitas){
+        document.getElementById('visits').innerHTML = visitas;
+    });
+
+    </script>

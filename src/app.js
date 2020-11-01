@@ -1,78 +1,57 @@
 const app = require('express')();
-const mysql = require('mysql');
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-// environment variables
+// Environment variables
 const PORT = process.env.PORT || 9090;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// mysql credentials
-const connection = mysql.createConnection({
-	host: process.env.MYSQL_HOST || 'mysql', // Container's name
-	user: process.env.MYSQL_USER || 'root',
-	password: process.env.MYSQL_PASSWORD || 'root',
-    database: process.env.MYSQL_DATABASE || 'mysql',
-    port: 3306
-});
-
-connection.connect((err) => {
+http.listen(PORT, HOST, (err) => {
 	if (err) {
-		console.error('error connecting mysql: ', err);
+		console.error('Error starting  server', err);
 	} else {
-		console.log('mysql connection successful');
-		app.listen(PORT, HOST, (err) => {
-			if (err) {
-				console.error('Error starting  server', err);
-			} else {
-				console.log('server listening at port ' + PORT + " and host " + HOST);
-			}
-		});
+		console.log('server listening at port ' + PORT + " and host " + HOST);
 	}
 });
 
-// Test Get
-app.get('/', (req, res) => {
-	res.json({
-		success: true,
-		message: 'Hello world'
-	});
+// Anything beginning with "/api" will go into this
+app.use('/api', require('./app/routes/api'));
+
+// Test Socket io
+app.get('/', function(req, res){
+	res.sendFile(__dirname + '/html/index.html');
 });
 
-// // Insert a student into database
-// app.post('/add-student', (req, res) => {
-// 	const student = req.body;
-// 	const query = 'INSERT INTO students values(?, ?)';
+var visitas = 0;
+// Evento connection ocorre quando entra um novo usuário.
+io.on('connection', function(socket){
+	socket.on('chat message', function(msg){
+		socket.emit('chat message', msg);
+	});
 
-// 	connection.query(query, [student.rollNo, student.name], (err, results, fields) => {
-// 		if (err) {
-// 			console.error(err);
-// 			res.json({
-// 				success: false,
-// 				message: 'Error occured'
-// 			});
-// 		} else {
-// 			res.json({
-// 				success: true,
-// 				message: 'Successfully added student'
-// 			});
-// 		}
-// 	});
-// });
+	// Id do cliente que esta se conectando com o server
+	console.log(socket.id);
 
-// Get all students
-app.post('/get-students', (req, res) => {
-	const query = 'SELECT * FROM students';
-    connection.query(query, (err, results, fields) => {
-    	if (err) {
-    		console.error(err);
-    		res.json({
-    			success: false,
-    			message: 'Error occured'
-    		});
-    	} else {
-    		res.json({
-    			success: true,
-    			result: results
-    		});
-    	}
-    });
+	// Incrementa o total de visitas no site.
+	visitas++;
+
+	// Envia o total de visitas para o novo usuário.
+	socket.emit('visits', visitas);
+
+	// Envia o total de visitas para os demais usuários.
+	socket.broadcast.emit('visits', visitas);
+
+	// Evento disconnect ocorre quando sai um usuário.
+	socket.on('disconnect', function(){
+		visitas--;
+
+		// Atualiza o total de visitas para os demais usuários.
+		socket.broadcast.emit('visits', visitas);
+
+		// Atualiza o total de visitas para os demais usuários.
+		socket.broadcast.emit('chat message', 'saiu alguem');
+
+		// Id do cliente que esta se conectando com o server
+		console.log(socket.id);
+	});
 });
