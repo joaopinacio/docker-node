@@ -8,5 +8,8 @@ WORKDIR /home/node/api
 # Bundle app source
 COPY . . 
 
+# To Restart server when any file changes
+RUN npm install -g nodemon
+
 # Install app dependencies and Run app
-CMD npm install && npm start
+CMD npm install && nodemon
