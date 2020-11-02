@@ -34,7 +34,7 @@ io.on('connection', function(socket){
 	io.emit('visits', visits);
 
 	var eventHandlers = {
-		chat: new Chat(io ,socket, visits)
+		chat: new Chat(io ,socket)
 	}
 
 	for (var category in eventHandlers) {
