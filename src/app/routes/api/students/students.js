@@ -1,16 +1,6 @@
 var router = require('express').Router();
 var connection = require('../../../config/db.js');
 
-// api/students
-router.get('/', function(req, res) {
-  res.json({ students: [] });
-});
-
-// api/students/:id
-router.get('/id/:id', function(req, res) {
-  res.json({ id: req.params.id });
-});
-
 // Test Get
 router.get('/test', (req, res) => {
 	res.json({
@@ -43,7 +33,7 @@ router.post('/add-student', (req, res) => {
 	const student = req.body;
 	const query = 'INSERT INTO students values(?, ?)';
 
-	connection.query(query, [student.rollNo, student.name], (err, results, fields) => {
+	connection.query(query, [student.id, student.name], (err, results, fields) => {
 		if (err) {
 			console.error(err);
 			res.json({

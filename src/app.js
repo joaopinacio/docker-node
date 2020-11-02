@@ -1,4 +1,5 @@
-const app = require('express')();
+const express = require('express');
+const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const Chat = require('./app/event/Chat.js');
@@ -14,6 +15,9 @@ http.listen(PORT, HOST, (err) => {
 		console.log('server listening at port ' + PORT + " and host " + HOST);
 	}
 });
+
+app.use(express.json());							// For parsing application/json
+app.use(express.urlencoded({ extended: true }));	// For parsing application/x-www-form-urlencoded
 
 // Anything beginning with "/api" will go into this
 app.use('/api', require('./app/routes/api'));
