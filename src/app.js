@@ -1,6 +1,7 @@
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const Chat = require('./app/event/Chat.js');
 
 // Environment variables
 const PORT = process.env.PORT || 9090;
@@ -22,36 +23,34 @@ app.get('/', function(req, res){
 	res.sendFile(__dirname + '/html/index.html');
 });
 
-var visitas = 0;
+var visits = 0;
 // Evento connection ocorre quando entra um novo usuário.
 io.on('connection', function(socket){
-	socket.on('chat message', function(msg){
-		socket.emit('chat message', msg);
-	});
+	visits++;
+	io.emit('visits', visits);
 
-	// Id do cliente que esta se conectando com o server
-	console.log(socket.id);
+	var eventHandlers = {
+		chat: new Chat(io ,socket, visits)
+	}
 
-	// Incrementa o total de visitas no site.
-	visitas++;
-
-	// Envia o total de visitas para o novo usuário.
-	socket.emit('visits', visitas);
-
-	// Envia o total de visitas para os demais usuários.
-	socket.broadcast.emit('visits', visitas);
-
+	for (var category in eventHandlers) {
+        var handler = eventHandlers[category].handler;
+        for (var event in handler) {
+            socket.on(event, handler[event]);
+        }
+	}
+	
 	// Evento disconnect ocorre quando sai um usuário.
 	socket.on('disconnect', function(){
-		visitas--;
+		visits--;
 
 		// Atualiza o total de visitas para os demais usuários.
-		socket.broadcast.emit('visits', visitas);
+		socket.broadcast.emit('visits', visits);
 
-		// Atualiza o total de visitas para os demais usuários.
+		// Avisa que alguem saiu para todos conectados.
 		socket.broadcast.emit('chat message', 'saiu alguem');
 
 		// Id do cliente que esta se conectando com o server
-		console.log(socket.id);
+		// console.log(socket.id);
 	});
 });
