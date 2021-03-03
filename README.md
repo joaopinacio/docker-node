@@ -1,5 +1,19 @@
 # Instructions
 
+### *In this Project makes you have a Mysql database and a backend in Node.js all in localhost.*  
+
+## About Node  
+**This backend uses the following libraries:**  
+
+- **Nodemon**  
+To restart the server every time you change a file.  
+
+- **Mysql**  
+To connect to the database.  
+
+- **Socket.io**  
+To have available functions that let you handle information in real time.  
+
 ## About Database
 See more in: [Docker Mysql](https://hub.docker.com/_/mysql)
 
