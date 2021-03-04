@@ -10,6 +10,25 @@ app.get('/test', (req, res) => {
 	});
 });
 
+app.post('/findByPk', async (req, res) => {
+	const product = await Product.findByPk(req.body.id);
+
+	res.json({
+		success: true,
+		result: product
+	});
+});
+
+app.post('/findByWhere', async (req, res) => {
+	const where = req.body;
+	const result = await Product.findAll({ where: where});
+
+	res.json({
+		success: true,
+		result: result
+	});
+});
+
 app.post('/create', async (req, res) => {
 	const product = req.body;
 	const result = await Product.create({
